@@ -1,10 +1,20 @@
 import { useState, useEffect } from "react";
-import { Menu, ShoppingCart, Search, X, Leaf, Heart } from "lucide-react";
+import { Menu, ShoppingCart, Search, X, Leaf, Heart, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import CartDrawer from "@/components/store/CartDrawer";
 import FavoritesDrawer from "@/components/store/FavoritesDrawer";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -13,6 +23,8 @@ const Header = () => {
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const { totalItems } = useCart();
   const { totalFavorites } = useFavorites();
+  const { user, logout, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -104,6 +116,53 @@ const Header = () => {
                 )}
               </Button>
 
+              {/* Authentication - Desktop */}
+              {isAuthenticated ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hidden sm:flex items-center gap-2 text-foreground hover:text-primary"
+                    >
+                      <User className="h-4 w-4" />
+                      <span className="hidden lg:inline">{user?.name}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <div className="px-2 py-1.5 text-sm">
+                      <p className="font-medium">{user?.name}</p>
+                      <p className="text-muted-foreground text-xs">{user?.email}</p>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={logout} className="cursor-pointer">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate("/login")}
+                    className="hidden sm:inline-flex"
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => navigate("/signup")}
+                    className="hidden sm:inline-flex"
+                  >
+                    Sign Up
+                  </Button>
+                </>
+              )}
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -134,6 +193,57 @@ const Header = () => {
                   {link.name}
                 </a>
               ))}
+              
+              {/* Mobile Auth Section */}
+              <div className="pt-4 border-t border-border space-y-2">
+                {isAuthenticated ? (
+                  <>
+                    <div className="flex items-center gap-2 py-2 text-foreground">
+                      <User className="h-4 w-4" />
+                      <div>
+                        <p className="font-medium">{user?.name}</p>
+                        <p className="text-xs text-muted-foreground">{user?.email}</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        logout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        navigate("/login");
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full"
+                    >
+                      Login
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        navigate("/signup");
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full"
+                    >
+                      Sign Up
+                    </Button>
+                  </>
+                )}
+              </div>
             </nav>
           </div>
         )}
