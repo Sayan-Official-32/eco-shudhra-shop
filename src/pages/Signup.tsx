@@ -19,6 +19,17 @@ export default function Signup() {
     e.preventDefault();
     setError("");
 
+    // Validation
+    if (!name.trim()) {
+      setError("Name is required");
+      return;
+    }
+
+    if (!email.trim()) {
+      setError("Email is required");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -33,7 +44,17 @@ export default function Signup() {
     if (success) {
       navigate("/");
     } else {
-      setError("Email already exists or signup failed");
+      setError("This email is already registered. Please use a different email or login.");
+    }
+  };
+
+  // Add clear data button for development
+  const clearData = () => {
+    if (confirm("Clear all user data? This will delete all accounts.")) {
+      localStorage.removeItem("users");
+      localStorage.removeItem("currentUser");
+      alert("All data cleared! You can now signup again.");
+      window.location.reload();
     }
   };
 
@@ -94,6 +115,17 @@ export default function Signup() {
             <Button type="submit" className="w-full">
               Sign Up
             </Button>
+            
+            {/* Development only - Remove in production */}
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="w-full" 
+              onClick={clearData}
+            >
+              🗑️ Clear All Data (Dev Only)
+            </Button>
+            
             <p className="text-sm text-center text-muted-foreground">
               Already have an account?{" "}
               <Link to="/login" className="text-primary hover:underline">
