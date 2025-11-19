@@ -1,81 +1,93 @@
-import { ShoppingCart, Heart } from "lucide-react";
+import { ShoppingCart, Heart, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useCart } from "@/contexts/CartContext";
 
 interface ProductCardProps {
+  id: number;
   name: string;
   price: number;
   originalPrice?: number;
   image: string;
   category: string;
-  isNew?: boolean;
-  isBestseller?: boolean;
+  rating: number;
+  onClick: () => void;
 }
 
 const ProductCard = ({
+  id,
   name,
   price,
   originalPrice,
   image,
   category,
-  isNew,
-  isBestseller,
+  rating,
+  onClick,
 }: ProductCardProps) => {
+  const { addToCart } = useCart();
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToCart({ id, name, price, image, category, rating });
+  };
+
   return (
-    <Card className="group overflow-hidden hover-lift cursor-pointer border-border">
+    <div 
+      className="group cursor-pointer bg-card rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg"
+      onClick={onClick}
+    >
       <div className="relative aspect-square overflow-hidden bg-muted">
         <img
           src={image}
           alt={name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
-        
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
-          {isNew && (
-            <Badge className="bg-accent text-accent-foreground">New</Badge>
-          )}
-          {isBestseller && (
-            <Badge className="bg-primary text-primary-foreground">Bestseller</Badge>
-          )}
-        </div>
-
-        {/* Wishlist button */}
-        <Button
-          size="icon"
-          variant="secondary"
-          className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity"
+        {originalPrice && (
+          <div className="absolute top-3 left-3 bg-accent text-accent-foreground px-2 py-1 rounded-full text-xs font-bold">
+            SALE
+          </div>
+        )}
+        <button
+          className="absolute top-3 right-3 p-2 bg-background/80 backdrop-blur-sm rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
         >
           <Heart className="h-4 w-4" />
-        </Button>
-
-        {/* Quick add to cart */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            Add to Cart
-          </Button>
-        </div>
+        </button>
       </div>
 
-      <div className="p-4 space-y-2">
-        <div className="text-xs text-muted-foreground uppercase tracking-wide">
-          {category}
+      <div className="p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-primary font-medium">{category}</span>
+          <div className="flex items-center gap-1">
+            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+            <span className="text-xs text-foreground/60">{rating}</span>
+          </div>
         </div>
+
         <h3 className="font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
           {name}
         </h3>
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-bold text-primary">₹{price}</span>
-          {originalPrice && (
-            <span className="text-sm text-muted-foreground line-through">
-              ₹{originalPrice}
-            </span>
-          )}
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-baseline gap-2">
+            <span className="text-lg font-bold text-foreground">₹{price}</span>
+            {originalPrice && (
+              <span className="text-sm text-foreground/40 line-through">
+                ₹{originalPrice}
+              </span>
+            )}
+          </div>
+          <Button
+            size="icon"
+            className="h-9 w-9 rounded-full"
+            onClick={handleAddToCart}
+          >
+            <ShoppingCart className="h-4 w-4" />
+          </Button>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 
