@@ -5,7 +5,6 @@ import { useCart } from "@/contexts/CartContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import CartDrawer from "@/components/store/CartDrawer";
 import FavoritesDrawer from "@/components/store/FavoritesDrawer";
 import {
   DropdownMenu,
@@ -19,7 +18,6 @@ import {
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const { totalItems } = useCart();
   const { totalFavorites } = useFavorites();
@@ -101,12 +99,12 @@ const Header = () => {
                 )}
               </Button>
 
-              {/* Cart Button */}
+              {/* Cart Button - Now navigates to /cart page */}
               <Button
                 variant="ghost"
                 size="icon"
                 className="text-foreground hover:text-primary relative"
-                onClick={() => setIsCartOpen(true)}
+                onClick={() => navigate("/cart")}
               >
                 <ShoppingCart className="h-5 w-5" />
                 {totalItems > 0 && (
@@ -254,9 +252,6 @@ const Header = () => {
         isOpen={isFavoritesOpen} 
         onClose={() => setIsFavoritesOpen(false)} 
       />
-
-      {/* Cart Drawer */}
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>
   );
 };

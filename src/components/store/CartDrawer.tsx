@@ -1,6 +1,8 @@
-import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
+import { X, Plus, Minus, ShoppingBag, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -8,7 +10,9 @@ interface CartDrawerProps {
 }
 
 const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
-  const { cartItems, removeFromCart, updateQuantity, totalItems, totalPrice, clearCart } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, totalItems, totalPrice } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   if (!isOpen) return null;
 
@@ -19,7 +23,6 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-fade-in"
         onClick={onClose}
       />
-
       {/* Drawer */}
       <div className="fixed right-0 top-0 h-full w-full sm:w-96 bg-background shadow-2xl z-50 flex flex-col animate-slide-in-right">
         {/* Header */}
@@ -68,6 +71,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
                         className="p-1 hover:bg-background rounded transition-colors"
+                        disabled={item.quantity <= 1}
                       >
                         <Minus className="h-4 w-4" />
                       </button>
@@ -109,15 +113,18 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
               <span>Total</span>
               <span className="text-primary">₹{totalPrice}</span>
             </div>
-            <Button className="w-full h-12 text-base font-semibold">
-              Proceed to Checkout
-            </Button>
             <Button
-              variant="outline"
-              className="w-full"
-              onClick={clearCart}
+              className="w-full h-12 text-base font-semibold"
+              onClick={() => {
+                if (!user) {
+                  navigate("/login");
+                } else {
+                  navigate("/checkout");
+                  onClose();
+                }
+              }}
             >
-              Clear Cart
+              Proceed to Checkout
             </Button>
           </div>
         )}

@@ -1,7 +1,8 @@
-import { Star, Heart } from "lucide-react";
+import { Star, Heart, ShoppingCart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 
 interface ProductCardProps {
@@ -31,6 +32,7 @@ const ProductCard = ({
   ...rest
 }: ProductCardProps) => {
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  const { addToCart } = useCart();
   const isInFavorites = isFavorite(id);
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
@@ -39,9 +41,37 @@ const ProductCard = ({
       removeFromFavorites(id);
       toast.success(`${name} removed from favorites`);
     } else {
-      addToFavorites({ id, name, price, originalPrice, image, category, rating, reviews, inStock, ...rest } as any);
+      addToFavorites({
+        id,
+        name,
+        price,
+        originalPrice,
+        image,
+        category,
+        rating,
+        reviews,
+        inStock,
+        ...rest,
+      } as any);
       toast.success(`${name} added to favorites!`);
     }
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToCart({
+      id,
+      name,
+      price,
+      originalPrice,
+      image,
+      category,
+      rating,
+      reviews,
+      inStock,
+      ...rest,
+    });
+    toast.success(`${name} added to cart!`);
   };
 
   return (
@@ -56,12 +86,12 @@ const ProductCard = ({
         className="absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background hover:scale-110 transition-all"
         onClick={handleFavoriteClick}
       >
-        <Heart 
+        <Heart
           className={`h-5 w-5 transition-colors ${
-            isInFavorites 
-              ? 'fill-primary text-primary' 
-              : 'text-muted-foreground hover:text-primary'
-          }`} 
+            isInFavorites
+              ? "fill-primary text-primary"
+              : "text-muted-foreground hover:text-primary"
+          }`}
         />
       </Button>
 
@@ -104,7 +134,7 @@ const ProductCard = ({
           <span className="text-muted-foreground">({reviews})</span>
         </div>
 
-        {/* Price */}
+        {/* Price and Add to Cart Button */}
         <div className="flex items-center justify-between pt-2 border-t">
           <div className="flex items-center space-x-2">
             <span className="text-2xl font-bold text-primary">₹{price}</span>
@@ -114,6 +144,17 @@ const ProductCard = ({
               </span>
             )}
           </div>
+          <Button
+            variant="default"
+            size="sm"
+            disabled={!inStock}
+            className="flex items-center gap-2"
+            onClick={handleAddToCart}
+            style={{ minWidth: 0 }}
+          >
+            <ShoppingCart className="h-4 w-4" />
+            Add to Cart
+          </Button>
         </div>
       </div>
     </div>
