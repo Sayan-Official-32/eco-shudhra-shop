@@ -1,6 +1,8 @@
-import { ShoppingCart, Heart, Star } from "lucide-react";
+import { Star, Heart } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/contexts/CartContext";
+import { useFavorites } from "@/contexts/FavoritesContext";
+import { toast } from "sonner";
 
 interface ProductCardProps {
   id: number;
@@ -10,6 +12,8 @@ interface ProductCardProps {
   image: string;
   category: string;
   rating: number;
+  reviews: number;
+  inStock: boolean;
   onClick: () => void;
 }
 
@@ -21,70 +25,95 @@ const ProductCard = ({
   image,
   category,
   rating,
+  reviews,
+  inStock,
   onClick,
+  ...rest
 }: ProductCardProps) => {
-  const { addToCart } = useCart();
+  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  const isInFavorites = isFavorite(id);
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    addToCart({ id, name, price, image, category, rating });
+    if (isInFavorites) {
+      removeFromFavorites(id);
+      toast.success(`${name} removed from favorites`);
+    } else {
+      addToFavorites({ id, name, price, originalPrice, image, category, rating, reviews, inStock, ...rest } as any);
+      toast.success(`${name} added to favorites!`);
+    }
   };
 
   return (
-    <div 
-      className="group cursor-pointer bg-card rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg"
+    <div
       onClick={onClick}
+      className="group bg-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-border hover:border-primary/50 relative"
     >
-      <div className="relative aspect-square overflow-hidden bg-muted">
+      {/* Favorite Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background hover:scale-110 transition-all"
+        onClick={handleFavoriteClick}
+      >
+        <Heart 
+          className={`h-5 w-5 transition-colors ${
+            isInFavorites 
+              ? 'fill-primary text-primary' 
+              : 'text-muted-foreground hover:text-primary'
+          }`} 
+        />
+      </Button>
+
+      {/* Image */}
+      <div className="relative h-64 overflow-hidden bg-muted">
         <img
           src={image}
           alt={name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
         />
-        {originalPrice && (
-          <div className="absolute top-3 left-3 bg-accent text-accent-foreground px-2 py-1 rounded-full text-xs font-bold">
-            SALE
+        {!inStock && (
+          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+            <Badge variant="destructive" className="text-sm">
+              Out of Stock
+            </Badge>
           </div>
         )}
-        <button
-          className="absolute top-3 right-3 p-2 bg-background/80 backdrop-blur-sm rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          <Heart className="h-4 w-4" />
-        </button>
+        {originalPrice && (
+          <Badge className="absolute top-3 left-3 bg-accent text-accent-foreground">
+            Save ₹{originalPrice - price}
+          </Badge>
+        )}
       </div>
 
+      {/* Content */}
       <div className="p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-primary font-medium">{category}</span>
-          <div className="flex items-center gap-1">
-            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-            <span className="text-xs text-foreground/60">{rating}</span>
-          </div>
+        <div>
+          <Badge variant="secondary" className="mb-2 text-xs">
+            {category}
+          </Badge>
+          <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors">
+            {name}
+          </h3>
         </div>
 
-        <h3 className="font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
-          {name}
-        </h3>
+        {/* Rating */}
+        <div className="flex items-center space-x-1 text-sm">
+          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+          <span className="font-medium">{rating}</span>
+          <span className="text-muted-foreground">({reviews})</span>
+        </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-baseline gap-2">
-            <span className="text-lg font-bold text-foreground">₹{price}</span>
+        {/* Price */}
+        <div className="flex items-center justify-between pt-2 border-t">
+          <div className="flex items-center space-x-2">
+            <span className="text-2xl font-bold text-primary">₹{price}</span>
             {originalPrice && (
-              <span className="text-sm text-foreground/40 line-through">
+              <span className="text-sm text-muted-foreground line-through">
                 ₹{originalPrice}
               </span>
             )}
           </div>
-          <Button
-            size="icon"
-            className="h-9 w-9 rounded-full"
-            onClick={handleAddToCart}
-          >
-            <ShoppingCart className="h-4 w-4" />
-          </Button>
         </div>
       </div>
     </div>

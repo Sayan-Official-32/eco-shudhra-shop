@@ -6,9 +6,10 @@ import { parseCSV, Product } from "@/lib/csvParser";
 interface ProductGridProps {
   selectedCategory: string | null;
   onProductCountsChange?: (counts: Record<string, number>) => void;
+  onProductsLoad?: (products: Product[]) => void;
 }
 
-const ProductGrid = ({ selectedCategory, onProductCountsChange }: ProductGridProps) => {
+const ProductGrid = ({ selectedCategory, onProductCountsChange, onProductsLoad }: ProductGridProps) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +39,11 @@ const ProductGrid = ({ selectedCategory, onProductCountsChange }: ProductGridPro
         if (onProductCountsChange) {
           onProductCountsChange(counts);
         }
+
+        // Pass products to parent for search
+        if (onProductsLoad) {
+          onProductsLoad(parsedProducts);
+        }
         
         setLoading(false);
       } catch (err) {
@@ -48,7 +54,7 @@ const ProductGrid = ({ selectedCategory, onProductCountsChange }: ProductGridPro
     };
 
     loadProducts();
-  }, [onProductCountsChange]);
+  }, [onProductCountsChange, onProductsLoad]);
 
   // Filter products by category
   const filteredProducts = selectedCategory

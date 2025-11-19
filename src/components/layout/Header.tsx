@@ -1,14 +1,18 @@
 import { useState, useEffect } from "react";
-import { Menu, ShoppingCart, Search, X, Leaf } from "lucide-react";
+import { Menu, ShoppingCart, Search, X, Leaf, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
+import { useFavorites } from "@/contexts/FavoritesContext";
 import CartDrawer from "@/components/store/CartDrawer";
+import FavoritesDrawer from "@/components/store/FavoritesDrawer";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const { totalItems } = useCart();
+  const { totalFavorites } = useFavorites();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -69,6 +73,23 @@ const Header = () => {
               >
                 <Search className="h-5 w-5" />
               </Button>
+              
+              {/* Favorites Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-foreground hover:text-primary relative"
+                onClick={() => setIsFavoritesOpen(true)}
+              >
+                <Heart className={`h-5 w-5 ${totalFavorites > 0 ? 'fill-primary text-primary' : ''}`} />
+                {totalFavorites > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold">
+                    {totalFavorites}
+                  </span>
+                )}
+              </Button>
+
+              {/* Cart Button */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -82,6 +103,7 @@ const Header = () => {
                   </span>
                 )}
               </Button>
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -117,6 +139,13 @@ const Header = () => {
         )}
       </header>
 
+      {/* Favorites Drawer */}
+      <FavoritesDrawer 
+        isOpen={isFavoritesOpen} 
+        onClose={() => setIsFavoritesOpen(false)} 
+      />
+
+      {/* Cart Drawer */}
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>
   );

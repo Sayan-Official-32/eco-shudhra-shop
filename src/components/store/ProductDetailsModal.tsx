@@ -1,6 +1,8 @@
 import { X, ShoppingCart, Heart, Share2, Star, Truck, Shield, Recycle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
+import { useFavorites } from "@/contexts/FavoritesContext";
+import { toast } from "sonner";
 
 interface ProductDetailsModalProps {
   product: {
@@ -22,9 +24,41 @@ interface ProductDetailsModalProps {
 
 const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalProps) => {
   const { addToCart } = useCart();
+  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  const isInFavorites = isFavorite(product.id);
 
   const handleAddToCart = () => {
+    if (!product.inStock) {
+      toast.error("This product is currently out of stock");
+      return;
+    }
     addToCart(product);
+    toast.success(`${product.name} added to cart!`);
+  };
+
+  const handleFavoriteClick = () => {
+    if (isInFavorites) {
+      removeFromFavorites(product.id);
+      toast.success(`${product.name} removed from favorites`);
+    } else {
+      addToFavorites(product);
+      toast.success(`${product.name} added to favorites!`);
+    }
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: product.name,
+        text: product.description,
+        url: window.location.href,
+      }).catch(() => {
+        toast.error("Sharing failed");
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copied to clipboard!");
+    }
   };
 
   return (
@@ -137,10 +171,24 @@ const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalProps) => 
                 <ShoppingCart className="h-5 w-5 mr-2" />
                 Add to Cart
               </Button>
-              <Button variant="outline" size="icon" className="h-12 w-12">
-                <Heart className="h-5 w-5" />
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-12 w-12"
+                onClick={handleFavoriteClick}
+              >
+                <Heart 
+                  className={`h-5 w-5 ${
+                    isInFavorites ? "fill-primary text-primary" : ""
+                  }`} 
+                />
               </Button>
-              <Button variant="outline" size="icon" className="h-12 w-12">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-12 w-12"
+                onClick={handleShare}
+              >
                 <Share2 className="h-5 w-5" />
               </Button>
             </div>
