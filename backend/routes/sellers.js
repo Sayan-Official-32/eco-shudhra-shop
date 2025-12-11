@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-// Mock seller storage (replace with MongoDB model later)
+// Mock seller storage (replace with Firestore if needed)
 let sellers = [];
 
 // Get all sellers (admin only)

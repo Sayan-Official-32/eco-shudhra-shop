@@ -1,59 +1,100 @@
 const express = require('express');
 const router = express.Router();
-const Product = require('../models/Product');
+const admin = require('firebase-admin');
 
 // Get all products
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find({ isActive: true }).sort({ createdAt: -1 });
+    const db = req.db;
+    const productsSnapshot = await db.collection('products')
+      .where('isActive', '==', true)
+      .orderBy('createdAt', 'desc')
+      .get();
+    
+    const products = [];
+    productsSnapshot.forEach(doc => {
+      products.push({ id: doc.id, ...doc.data() });
+    });
+    
     res.json(products);
   } catch (error) {
+    console.error('Error fetching products:', error);
     res.status(500).json({ message: error.message });
   }
 });
 
 // Get products by seller
+// Get products by seller
 router.get('/seller/:sellerId', async (req, res) => {
   try {
-    const products = await Product.find({ sellerId: req.params.sellerId });
+    const db = req.db;
+    const productsSnapshot = await db.collection('products')
+      .where('sellerId', '==', req.params.sellerId)
+      .get();
+    
+    const products = [];
+    productsSnapshot.forEach(doc => {
+      products.push({ id: doc.id, ...doc.data() });
+    });
+    
+    // Sort in JavaScript instead
+    products.sort((a, b) => {
+      if (!a.createdAt || !b.createdAt) return 0;
+      return b.createdAt.toMillis() - a.createdAt.toMillis();
+    });
+    
     res.json(products);
   } catch (error) {
+    console.error('Error fetching products:', error);
     res.status(500).json({ message: error.message });
   }
 });
 
+
 // Get single product
 router.get('/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
-    if (!product) {
+    const db = req.db;
+    const productDoc = await db.collection('products').doc(req.params.id).get();
+    
+    if (!productDoc.exists) {
       return res.status(404).json({ message: 'Product not found' });
     }
-    res.json(product);
+    
+    res.json({ id: productDoc.id, ...productDoc.data() });
   } catch (error) {
+    console.error('Error fetching product:', error);
     res.status(500).json({ message: error.message });
   }
 });
 
 // Create product
 router.post('/', async (req, res) => {
-  const product = new Product({
-    name: req.body.name,
-    description: req.body.description,
-    price: req.body.price,
-    originalPrice: req.body.originalPrice,
-    category: req.body.category,
-    image: req.body.image,
-    stock: req.body.stock,
-    ecoScore: req.body.ecoScore,
-    sellerId: req.body.sellerId,
-    sellerName: req.body.sellerName,
-  });
-
   try {
-    const newProduct = await product.save();
-    res.status(201).json(newProduct);
+    const db = req.db;
+    const productData = {
+      name: req.body.name,
+      description: req.body.description,
+      price: req.body.price,
+      originalPrice: req.body.originalPrice || null,
+      category: req.body.category,
+      image: req.body.image,
+      stock: req.body.stock,
+      rating: 0,
+      ecoScore: req.body.ecoScore || 'B',
+      sellerId: req.body.sellerId,
+      sellerName: req.body.sellerName,
+      isActive: true,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    const docRef = await db.collection('products').add(productData);
+    const newProduct = await docRef.get();
+    
+    res.status(201).json({ id: newProduct.id, ...newProduct.data() });
   } catch (error) {
+    console.error('Error creating product:', error);
     res.status(400).json({ message: error.message });
   }
 });
@@ -61,25 +102,35 @@ router.post('/', async (req, res) => {
 // Update product
 router.put('/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
-    if (!product) {
+    const db = req.db;
+    const productRef = db.collection('products').doc(req.params.id);
+    const productDoc = await productRef.get();
+    
+    if (!productDoc.exists) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
+    const productData = productDoc.data();
+    
     // Check if user is the seller
-    if (product.sellerId !== req.body.sellerId) {
+    if (productData.sellerId !== req.body.sellerId) {
       return res.status(403).json({ message: 'Unauthorized' });
     }
 
-    Object.keys(req.body).forEach(key => {
-      if (key !== 'sellerId' && req.body[key] !== undefined) {
-        product[key] = req.body[key];
-      }
-    });
+    const updateData = {
+      ...req.body,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+    
+    // Remove sellerId from update to prevent changing ownership
+    delete updateData.sellerId;
 
-    const updatedProduct = await product.save();
-    res.json(updatedProduct);
+    await productRef.update(updateData);
+    const updatedProduct = await productRef.get();
+    
+    res.json({ id: updatedProduct.id, ...updatedProduct.data() });
   } catch (error) {
+    console.error('Error updating product:', error);
     res.status(400).json({ message: error.message });
   }
 });
@@ -87,19 +138,25 @@ router.put('/:id', async (req, res) => {
 // Delete product
 router.delete('/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
-    if (!product) {
+    const db = req.db;
+    const productRef = db.collection('products').doc(req.params.id);
+    const productDoc = await productRef.get();
+    
+    if (!productDoc.exists) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
+    const productData = productDoc.data();
+    
     // Check if user is the seller
-    if (product.sellerId !== req.body.sellerId) {
+    if (productData.sellerId !== req.body.sellerId) {
       return res.status(403).json({ message: 'Unauthorized' });
     }
 
-    await product.deleteOne();
-    res.json({ message: 'Product deleted' });
+    await productRef.delete();
+    res.json({ message: 'Product deleted successfully' });
   } catch (error) {
+    console.error('Error deleting product:', error);
     res.status(500).json({ message: error.message });
   }
 });

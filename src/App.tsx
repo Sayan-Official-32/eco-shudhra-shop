@@ -18,6 +18,7 @@ import Cart from "./pages/Cart";
 import SellerLogin from "./pages/SellerLogin";
 import SellerSignup from "./pages/SellerSignup";
 import SellerDashboard from "./pages/SellerDashboard";
+import AddProduct from "./pages/AddProduct";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
                     <Route path="/seller-login" element={<SellerLogin />} />
                     <Route path="/seller-signup" element={<SellerSignup />} />
                     <Route path="/seller-dashboard" element={<SellerDashboard />} />
+                    <Route path="/add-product" element={<AddProduct />} />
 
                     {/* 404 Page */}
                     <Route path="*" element={<NotFound />} />
