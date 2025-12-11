@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAdmin } from "@/contexts/AdminContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,24 +10,20 @@ import { Shield } from "lucide-react";
 export default function AdminLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAdmin();
   const navigate = useNavigate();
-
-  // Admin credentials - you can change these
-  const ADMIN_USERNAME = "admin";
-  const ADMIN_PASSWORD = "admin123";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setIsLoading(true);
 
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      // Store admin session
-      localStorage.setItem("isAdmin", "true");
+    const success = login(username, password);
+    if (success) {
       navigate("/admin");
-    } else {
-      setError("Invalid admin credentials");
     }
+
+    setIsLoading(false);
   };
 
   return (
@@ -67,13 +64,8 @@ export default function AdminLogin() {
                 required
               />
             </div>
-            {error && (
-              <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
-                {error}
-              </div>
-            )}
-            <Button type="submit" className="w-full">
-              Login as Admin
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Logging in..." : "Login as Admin"}
             </Button>
             <p className="text-xs text-center text-muted-foreground">
               Default: admin / admin123

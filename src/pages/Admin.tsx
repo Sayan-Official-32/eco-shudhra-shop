@@ -1,33 +1,50 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAdmin } from "@/contexts/AdminContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogOut, Shield, Eye, EyeOff } from "lucide-react";
+import { LogOut, Shield, Eye, EyeOff, Store } from "lucide-react";
 
 export default function Admin() {
   const [users, setUsers] = useState<any[]>([]);
+  const [sellers, setSellers] = useState<any[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showPasswords, setShowPasswords] = useState(false);
+  const { admin, logout, isAuthenticated } = useAdmin();
   const navigate = useNavigate();
 
   useEffect(() => {
     // Check if user is admin
-    const isAdmin = localStorage.getItem("isAdmin");
-    if (isAdmin !== "true") {
+    if (!isAuthenticated) {
       navigate("/admin-login");
       return;
     }
 
-    // Load data from localStorage
+    // Load users from localStorage
     const usersData = localStorage.getItem("users");
     const currentUserData = localStorage.getItem("currentUser");
     
     setUsers(usersData ? JSON.parse(usersData) : []);
     setCurrentUser(currentUserData ? JSON.parse(currentUserData) : null);
-  }, [navigate]);
+
+    // Fetch sellers from backend
+    fetchSellers();
+  }, [isAuthenticated, navigate]);
+
+  const fetchSellers = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/sellers/all');
+      if (response.ok) {
+        const data = await response.json();
+        setSellers(data);
+      }
+    } catch (error) {
+      console.error('Error fetching sellers:', error);
+    }
+  };
 
   const handleLogout = () => {
-    localStorage.removeItem("isAdmin");
+    logout();
     navigate("/admin-login");
   };
 
@@ -56,7 +73,12 @@ export default function Admin() {
             <div className="bg-primary text-primary-foreground p-2 rounded-lg">
               <Shield className="h-6 w-6" />
             </div>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <div>
+              <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+              <p className="text-sm text-muted-foreground">
+                Welcome, {admin?.username}
+              </p>
+            </div>
           </div>
           <div className="flex gap-2">
             <Button variant="destructive" onClick={clearAllData}>
@@ -70,13 +92,24 @@ export default function Admin() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader>
               <CardTitle>Total Users</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-4xl font-bold">{users.length}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Total Sellers</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <Store className="h-8 w-8 text-primary" />
+                <p className="text-4xl font-bold">{sellers.length}</p>
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -111,6 +144,54 @@ export default function Admin() {
               </div>
             ) : (
               <p className="text-muted-foreground">No user logged in</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* All Sellers */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Store className="h-5 w-5" />
+              All Registered Sellers ({sellers.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {sellers.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-3">ID</th>
+                      <th className="text-left p-3">Name</th>
+                      <th className="text-left p-3">Email</th>
+                      <th className="text-left p-3">Business Name</th>
+                      <th className="text-left p-3">Joined Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sellers.map((seller) => (
+                      <tr key={seller.id} className="border-b hover:bg-muted/50">
+                        <td className="p-3">{seller.id}</td>
+                        <td className="p-3">{seller.name}</td>
+                        <td className="p-3">{seller.email}</td>
+                        <td className="p-3 font-semibold text-primary">{seller.businessName}</td>
+                        <td className="p-3 text-sm text-muted-foreground">
+                          {new Date(seller.createdAt).toLocaleDateString('en-IN', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No sellers registered yet</p>
             )}
           </CardContent>
         </Card>
@@ -175,4 +256,3 @@ export default function Admin() {
     </div>
   );
 }
-

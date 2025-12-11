@@ -6,6 +6,24 @@ const jwt = require('jsonwebtoken');
 // Mock seller storage (replace with MongoDB model later)
 let sellers = [];
 
+// Get all sellers (admin only)
+router.get('/all', async (req, res) => {
+  try {
+    // Return sellers without passwords
+    const sellersData = sellers.map(seller => ({
+      id: seller.id,
+      name: seller.name,
+      email: seller.email,
+      businessName: seller.businessName,
+      createdAt: seller.createdAt
+    }));
+    
+    res.json(sellersData);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Seller Signup
 router.post('/signup', async (req, res) => {
   try {
