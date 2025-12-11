@@ -116,16 +116,6 @@ export default function Signup() {
               Sign Up
             </Button>
             
-            {/* Development only - Remove in production */}
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="w-full" 
-              onClick={clearData}
-            >
-              🗑️ Clear All Data (Dev Only)
-            </Button>
-            
             <p className="text-sm text-center text-muted-foreground">
               Already have an account?{" "}
               <Link to="/login" className="text-primary hover:underline">
