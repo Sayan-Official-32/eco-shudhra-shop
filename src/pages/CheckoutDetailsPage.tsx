@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 type Customer = {
@@ -29,24 +29,32 @@ export function CheckoutDetailsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as LocationState | null;
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (!state || !state.cartItems || state.cartItems.length === 0) {
-    navigate("/cart", { replace: true });
-    return null;
-  }
+  useEffect(() => {
+    // Check if we have cart items in state
+    if (!state || !state.cartItems || state.cartItems.length === 0) {
+      // Redirect to cart after a brief delay
+      const timer = setTimeout(() => {
+        navigate("/cart", { replace: true });
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+    setIsLoading(false);
+  }, [state, navigate]);
 
-  const cartItems = state.cartItems;
+  const cartItems = state?.cartItems || [];
 
   const [customer, setCustomer] = useState<Customer>({
-    email: "aicoder001@gmail.com",
-    firstName: "John",
-    lastName: "Doe",
-    phone: "+91 98765 43210",
+    email: "",
+    firstName: "",
+    lastName: "",
+    phone: "",
     country: "India",
-    address: "House number, street name, area",
-    city: "Bhubaneswar",
-    state: "Odisha",
-    postalCode: "751001",
+    address: "",
+    city: "",
+    state: "",
+    postalCode: "",
   });
 
   const subtotal = cartItems.reduce(
@@ -79,6 +87,19 @@ export function CheckoutDetailsPage() {
     value: string
   ) {
     setCustomer((prev) => ({ ...prev, [field]: value }));
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-center">
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
+          <p className="text-lg text-muted-foreground">
+            Loading checkout details...
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -271,7 +292,7 @@ export function CheckoutDetailsPage() {
                   href="/cart"
                   className="text-sm text-primary hover:underline"
                 >
-                  Edit Cart
+                  Edit
                 </a>
               </div>
 
@@ -290,7 +311,7 @@ export function CheckoutDetailsPage() {
                         {item.name}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Quantity: {item.quantity}
+                        Qty: {item.quantity}
                       </p>
                       <p className="text-sm font-semibold text-green-600 mt-1">
                         {item.price}
