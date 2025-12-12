@@ -19,6 +19,8 @@ import SellerLogin from "./pages/SellerLogin";
 import SellerSignup from "./pages/SellerSignup";
 import SellerDashboard from "./pages/SellerDashboard";
 import AddProduct from "./pages/AddProduct";
+import { CheckoutDetailsPage } from "./pages/CheckoutDetailsPage";
+import { CheckoutReviewPage } from "./pages/CheckoutReviewPage";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +41,8 @@ const App = () => (
                     <Route path="/signup" element={<Signup />} />
                     <Route path="/cart" element={<Cart />} />
                     <Route path="/checkout" element={<Checkout />} />
+                                        <Route path="/checkout/details" element={<CheckoutDetailsPage />} />
+                                        <Route path="/checkout/review" element={<CheckoutReviewPage />} />
 
                     {/* Admin Routes */}
                     <Route path="/admin-login" element={<AdminLogin />} />
