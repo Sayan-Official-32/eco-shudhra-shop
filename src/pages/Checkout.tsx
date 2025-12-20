@@ -26,14 +26,12 @@ export default function Checkout() {
     return () => clearTimeout(timer);
   }, [items, navigate]);
 
-  if (isLoading || (items && items.length > 0)) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
           <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="text-lg text-muted-foreground">
-            Loading checkout...
-          </p>
+          <p className="text-lg text-muted-foreground">Loading checkout...</p>
         </div>
       </div>
     );
