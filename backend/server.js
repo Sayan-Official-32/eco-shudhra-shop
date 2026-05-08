@@ -12,7 +12,12 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Initialize Firebase Admin
 try {
-  const serviceAccount = require('./firebase-service-account.json');
+  let serviceAccount;
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  } else {
+    serviceAccount = require('./firebase-service-account.json');
+  }
 
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -44,8 +49,12 @@ app.get('/health', (req, res) => {
   res.json({ status: 'Server running', message: 'Backend is operational' });
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📡 API available at http://localhost:${PORT}/api`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📡 API available at http://localhost:${PORT}/api`);
+  });
+}
+
+module.exports = app;
